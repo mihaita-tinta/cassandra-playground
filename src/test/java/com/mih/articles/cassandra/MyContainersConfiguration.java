@@ -32,6 +32,32 @@ public class MyContainersConfiguration {
         return network;
     }
 
+    /**
+     * TODO add ui:
+     * <pre>
+     *   toxiproxy-ui:
+     *     image: "buckle/toxiproxy-frontend"
+     *     ports:
+     *       - "8470:8080"
+     *     environment:
+     *       TOXIPROXY_URL: http://toxiproxy:8474
+     *     depends_on:
+     *      - toxiproxy
+     *   toxiproxy:
+     *     image: "shopify/toxiproxy"
+     *     ports:
+     *       - "8474:8474"
+     *       - "9242:9142"
+     *     # We created proxy configuration from another ephermal container
+     *   toxiproxy-config:
+     *       image: "shopify/toxiproxy"
+     *       entrypoint: >
+     *         sh -c "/go/bin/toxiproxy-cli -h toxiproxy:8474 create cassandra --listen 0.0.0.0:9142 --upstream db:9142;"
+     * </pre>
+     * @param network
+     * @return
+     * @throws IOException
+     */
     @Bean
     ToxiproxyContainer toxiproxyContainer(Network network) throws IOException {
         ToxiproxyContainer toxiproxy = new ToxiproxyContainer("ghcr.io/shopify/toxiproxy:2.5.0")
