@@ -1,0 +1,44 @@
+version: '3.3'
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+services:
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    volumes:
+      - ./data:/var/lib/cassandra
+    environment:
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+    restart: always
+#  cassandra-exporter:
+#    image: bitnami/cassandra-exporter:latest
+#    container_name: cassandra-exporter
+#    ports:
+#      - "9024:8080"
+#    volumes:
+#      - ./cassandra-exporter/config.yml:/opt/bitnami/cassandra-exporter/config.yml
+#    restart: always
+#    depends_on:
+#      - cassandra
+  toxiproxy-ui:
+    image: "buckle/toxiproxy-frontend"
+    ports:
+      - "8470:8080"
+    environment:
+      TOXIPROXY_URL: http://toxiproxy:8474
+    depends_on:
+      - toxiproxy
+  toxiproxy:
+      image: "shopify/toxiproxy"
+      ports:
+        - "8474:8474"
+        - "9142:9142"
+      # We created proxy configuration from another ephermal container
+  toxiproxy-config:
+      image: "shopify/toxiproxy"
+      entrypoint: >
+        sh -c "/go/bin/toxiproxy-cli -h toxiproxy:8474 create cassandra --listen 0.0.0.0:9142 --upstream cassandra:9042;"

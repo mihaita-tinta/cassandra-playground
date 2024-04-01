@@ -3,16 +3,25 @@ package com.mih.articles.cassandra;
 import eu.rekawek.toxiproxy.Proxy;
 import eu.rekawek.toxiproxy.ToxiproxyClient;
 import eu.rekawek.toxiproxy.model.ToxicDirection;
+import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
+import org.springframework.boot.autoconfigure.cassandra.CassandraConnectionDetails;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.CassandraContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.ToxiproxyContainer;
 
 import java.io.IOException;
+import java.util.List;
 
+@Configuration
 public class MyContainersConfiguration {
 
 
@@ -76,14 +85,30 @@ public class MyContainersConfiguration {
     }
 
     @Bean
+    @DynamicPropertySource
     Proxy toxiCassandra(DynamicPropertyRegistry dynamicPropertyRegistry,
                         CassandraContainer db,
                         ToxiproxyContainer toxiproxy, ToxiproxyClient toxiproxyClient) throws IOException {
 
         var cassandra = toxiproxyClient.createProxy("cassandra", "0.0.0.0:8667", "cassandra:9042");
 
-        dynamicPropertyRegistry.add("toxiProxyCassandraPort", () -> toxiproxy.getMappedPort(8667));
         return cassandra;
+    }
+
+    @Bean
+    CassandraConnectionDetails cassandraConnectionDetails(Proxy toxiCassandra,
+                                                          ToxiproxyContainer toxiproxy) {
+        return new CassandraConnectionDetails() {
+            @Override
+            public List<Node> getContactPoints() {
+                return List.of(new Node("localhost", toxiproxy.getMappedPort(8667)));
+            }
+
+            @Override
+            public String getLocalDatacenter() {
+                return "datacenter1";
+            }
+        };
     }
 
 }
