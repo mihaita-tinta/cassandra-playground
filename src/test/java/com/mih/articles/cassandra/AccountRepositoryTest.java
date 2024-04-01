@@ -6,7 +6,6 @@ import eu.rekawek.toxiproxy.model.toxic.Latency;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
-import org.springframework.boot.test.autoconfigure.data.cassandra.DataCassandraTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalManagementPort;
 import org.springframework.context.annotation.Import;
@@ -20,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureObservability
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
         properties = "logging.level.org.springframework.data.cassandra.core.cql=DEBUG")
-@Import(MyContainersConfiguration.class)
+@Import(TestContainersConfiguration.class)
 class AccountRepositoryTest {
     @LocalManagementPort
     int managementPort;
@@ -35,12 +34,14 @@ class AccountRepositoryTest {
     void test() throws IOException {
         System.out.println("Metrics can be checked here: http://localhost:" + managementPort + "/actuator/prometheus" );
         Latency latency = toxiCassandra.toxics()
-                .latency("latency", ToxicDirection.DOWNSTREAM, 400);
-
+                .latency("latency2", ToxicDirection.DOWNSTREAM, 400);
+//        latency.setJitter(50);
         IntStream.range(0, 100)
                 .forEach(i -> {
                     try {
-                        latency.setJitter(10 + i);
+                        int value = 10 * i;
+                        System.out.println("Latency: " + value);
+                        latency.setLatency(value);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

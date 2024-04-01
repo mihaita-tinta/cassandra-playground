@@ -42,7 +42,5 @@ public class AccountResource {
         return repository.save(account);
     }
 
-
     record AccountCreateRequest(String name) {}
-    record AccountCreateResponse(String name) {}
 }

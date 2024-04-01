@@ -3,18 +3,13 @@ package com.mih.articles.cassandra;
 import eu.rekawek.toxiproxy.Proxy;
 import eu.rekawek.toxiproxy.ToxiproxyClient;
 import eu.rekawek.toxiproxy.model.ToxicDirection;
-import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration;
+import eu.rekawek.toxiproxy.model.toxic.Latency;
 import org.springframework.boot.autoconfigure.cassandra.CassandraConnectionDetails;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.CassandraContainer;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.ToxiproxyContainer;
 
@@ -22,7 +17,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Configuration
-public class MyContainersConfiguration {
+public class TestContainersConfiguration {
 
 
     @Bean
@@ -40,35 +35,8 @@ public class MyContainersConfiguration {
         Network network = Network.newNetwork();
         return network;
     }
-
-    /**
-     * TODO add ui:
-     * <pre>
-     *   toxiproxy-ui:
-     *     image: "buckle/toxiproxy-frontend"
-     *     ports:
-     *       - "8470:8080"
-     *     environment:
-     *       TOXIPROXY_URL: http://toxiproxy:8474
-     *     depends_on:
-     *      - toxiproxy
-     *   toxiproxy:
-     *     image: "shopify/toxiproxy"
-     *     ports:
-     *       - "8474:8474"
-     *       - "9242:9142"
-     *     # We created proxy configuration from another ephermal container
-     *   toxiproxy-config:
-     *       image: "shopify/toxiproxy"
-     *       entrypoint: >
-     *         sh -c "/go/bin/toxiproxy-cli -h toxiproxy:8474 create cassandra --listen 0.0.0.0:9142 --upstream db:9142;"
-     * </pre>
-     * @param network
-     * @return
-     * @throws IOException
-     */
     @Bean
-    ToxiproxyContainer toxiproxyContainer(Network network) throws IOException {
+    ToxiproxyContainer toxiproxyContainer(Network network) {
         ToxiproxyContainer toxiproxy = new ToxiproxyContainer("ghcr.io/shopify/toxiproxy:2.5.0")
                 .withNetwork(network)
                 .withExposedPorts(
@@ -79,18 +47,30 @@ public class MyContainersConfiguration {
     }
 
     @Bean
+    GenericContainer toxiproxyUI(Network network) {
+        GenericContainer ui = new GenericContainer<>("buckle/toxiproxy-frontend")
+                .withNetwork(network)
+                .withExposedPorts(
+                        8080
+                )
+                .withEnv("TOXIPROXY_URL", "http://toxiproxy:8474")
+                .withNetworkAliases("toxiproxy-ui");
+        return ui;
+    }
+
+    @Bean
     ToxiproxyClient toxiproxyClient(ToxiproxyContainer toxiproxy) {
         final ToxiproxyClient toxiproxyClient = new ToxiproxyClient(toxiproxy.getHost(), toxiproxy.getControlPort());
         return toxiproxyClient;
     }
 
     @Bean
-    @DynamicPropertySource
-    Proxy toxiCassandra(DynamicPropertyRegistry dynamicPropertyRegistry,
-                        CassandraContainer db,
+    Proxy toxiCassandra(CassandraContainer db,
                         ToxiproxyContainer toxiproxy, ToxiproxyClient toxiproxyClient) throws IOException {
 
         var cassandra = toxiproxyClient.createProxy("cassandra", "0.0.0.0:8667", "cassandra:9042");
+//        Latency latency = cassandra.toxics()
+//                .latency("latency", ToxicDirection.DOWNSTREAM, 10);
 
         return cassandra;
     }

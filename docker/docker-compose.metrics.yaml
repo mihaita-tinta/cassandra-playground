@@ -6,6 +6,8 @@ services:
   prometheus:
     image: prom/prometheus
     container_name: 'prometheus'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     volumes:
       - ./prometheus/:/etc/prometheus/
       - prometheus_data:/prometheus
@@ -23,25 +25,25 @@ services:
           cpus: '0.7'
           memory: 1024M
 
-  grafana:
-    image: grafana/grafana
-    container_name: 'grafana'
-    user: "104"
-    depends_on:
-      - prometheus
-    ports:
-      - 3000:3000
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning/:/etc/grafana/provisioning/
-    env_file:
-      - ./grafana/config.monitoring
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.8'
-          memory: 512M
+#  grafana:
+#    image: grafana/grafana
+#    container_name: 'grafana'
+#    user: "104"
+#    depends_on:
+#      - prometheus
+#    ports:
+#      - 3000:3000
+#    volumes:
+#      - grafana_data:/var/lib/grafana
+#      - ./grafana/provisioning/:/etc/grafana/provisioning/
+#    env_file:
+#      - ./grafana/config.monitoring
+#    restart: always
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '0.8'
+#          memory: 512M
 
 #  cadvisor:
 #    image: google/cadvisor
@@ -54,17 +56,17 @@ services:
 #      - 8090:8080
 #    restart: always
 
-  node-exporter:
-    image: prom/node-exporter
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - --collector.filesystem.ignored-mount-points
-      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
-    ports:
-      - 9100:9100
-    restart: always
+#  node-exporter:
+#    image: prom/node-exporter
+#    volumes:
+#      - /proc:/host/proc:ro
+#      - /sys:/host/sys:ro
+#      - /:/rootfs:ro
+#    command:
+#      - '--path.procfs=/host/proc'
+#      - '--path.sysfs=/host/sys'
+#      - --collector.filesystem.ignored-mount-points
+#      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+#    ports:
+#      - 9100:9100
+#    restart: always
