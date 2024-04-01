@@ -55,3 +55,7 @@ docker-compose -f docker/docker-compose.metrics.yaml up
 Access Prometheus from: http://localhost:9090/graph
 and check `cassandra_session_cql_requests_seconds_sum/cassandra_session_cql_requests_seconds_count`
 ![Prometheus](docs/prometheus.png "Title")
+
+We can use the local toxiproxy ui to change the network latency
+
+![Toxiproxy](docs/toxiproxy.png "Title")
