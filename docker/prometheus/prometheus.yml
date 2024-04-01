@@ -15,14 +15,6 @@ rule_files:
   # - "first.rules"
   # - "second.rules"
 
-## alert
-#alerting:
-#  alertmanagers:
-#    - scheme: http
-#      static_configs:
-#        - targets:
-#            - "alertmanager:9093"
-
 # A scrape configuration containing exactly one endpoint to scrape:
 # Here it's Prometheus itself.
 scrape_configs:
@@ -35,26 +27,9 @@ scrape_configs:
 
     static_configs:
       - targets: ['localhost:9090']
-  - job_name: 'cassandra-exporter'
-
-    # Override the global default and scrape targets from this job every 5 seconds.
-    scrape_interval: 5s
-
-    static_configs:
-      - targets: ['cassandra-exporter:8080']
-
-#  - job_name: 'cadvisor'
-#    scrape_interval: 5s
-#    static_configs:
-#      - targets: ['cadvisor:8080']
 
   - job_name: 'app'
     scrape_interval: 1s
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['host.docker.internal:8080']
-
-  - job_name: 'node-exporter'
-    scrape_interval: 5s
-    static_configs:
-      - targets: ['node-exporter:9100']
